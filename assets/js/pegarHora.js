@@ -1,38 +1,46 @@
-document.addEventListener("DOMContentLoaded", function () {
+let cCode;
+
+function fazerRequisicao() {
+  return new Promise((resolve, reject) => {
     fetch("https://timezoneapi.io/api/ip/?token=ayoMNmWjTzAFguEpXmvn")
-        .then(function (response) {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error("Erro na requisição. Código de status: " + response.status);
-            }
-        })
-        .then(function (resposta) {
-            //var respostaJs = JSON.parse(resposta);
-            var apiHour = parseInt(resposta.data.datetime.hour_24_wilz);
-            var apiMin = parseInt(resposta.data.datetime.minutes);
-            var apiSec = parseInt(resposta.data.datetime.seconds);
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error("Erro na requisição. Código de status: " + response.status);
+        }
+      })
+      .then(resposta => {
+        var apiHour = parseInt(resposta.data.datetime.hour_24_wilz);
+        var apiMin = parseInt(resposta.data.datetime.minutes);
+        var apiSec = parseInt(resposta.data.datetime.seconds);
 
-            criarRelogio(apiHour, apiMin, apiSec); // Chama a função para criar o relógio
+        cCode = resposta.data.country_code;
 
-        })
-        .then(function (error) {
-            console.log(error);
-        })
+        criarRelogio(apiHour, apiMin, apiSec);
+        resolve(cCode);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  fazerRequisicao()
+    .then(() => {
+      //console.log(cCode);
+      // Atribuir o valor de cCode a uma variável global para uso em outro script
+      //ToDo - refazer esse sistema para que não precise ser armazenado no localStorage
+      localStorage.setItem('cCode', cCode);
+    })
+    .catch(error => {
+      console.error(error);
+    });
 });
 
 
-
 function criarRelogio(hora, minuto, segundo) {
-    // Solicita a hora, minuto e segundo
-    //var hora = apiHour;
-    //var minuto = parseInt(prompt("Digite o minuto (0-59):"));
-    //var segundo = parseInt(prompt("Digite o segundo (0-59):"));
-    //console.log(hora);
-    //console.log(minuto);
-    //console.log(segundo);
-
-
 
     // Verifica se os valores estão dentro do intervalo válido
     if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59 || segundo < 0 || segundo > 59) {
@@ -74,12 +82,12 @@ function criarRelogio(hora, minuto, segundo) {
         // Aguarda 1 segundo antes de chamar a função novamente
         setTimeout(atualizarRelogio, 1000);
 
-
-
+        // Pega o elemento no Index.html
         const horas = document.getElementById('horas');
         const minutos = document.getElementById('minutos');
         const segundos = document.getElementById('segundos');
 
+        // Adiciona o 0 nos números únicos
         horas.textContent = adicionarZero(hora);
         minutos.textContent = adicionarZero(minuto);
         segundos.textContent = adicionarZero(segundo);
@@ -89,25 +97,3 @@ function criarRelogio(hora, minuto, segundo) {
     // Inicia a atualização do relógio
     atualizarRelogio();
 }
-
-
-
-
-/*const horas = document.getElementById('horas');
-const minutos = document.getElementById('minutos');
-const segundos = document.getElementById('segundos');
-
-const relogio = setInterval(function time() {
-    let dateToday = new Date();
-    let hr = dateToday.getHours();
-    let min = dateToday.getMinutes();
-    let sec = dateToday.getSeconds();
-
-    if (hr < 10) hr = '0' + hr;
-    if (min < 10) min = '0' + min;
-    if (sec < 10) sec = '0' + sec;
-
-    horas.textContent = hr;
-    minutos.textContent = min;
-    segundos.textContent = sec;
-})*/
